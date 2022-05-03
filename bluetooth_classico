@@ -1,0 +1,34 @@
+//Biblioteca para usar o bluetooth Clássico com placas HC-05 e HC-06 (...)
+//Ligar, desligar um led conectado na porta 7
+ 
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(2,3); //RX,TX
+ 
+char opcao;
+int led = 7;
+ 
+void setup(){
+  mySerial.begin(9600);
+  pinMode(led, OUTPUT);
+}
+ 
+void loop(){
+  if(mySerial.available()>0){ //Quando não usado envia valores -1 ao arduino
+    opcao = mySerial.read();
+    switch(opcao){
+      case 'F':
+      ligaLed();
+      break;
+      case 'B':
+      apagaLed();
+      break;
+    }
+  }
+}
+ 
+void ligaLed(){
+  digitalWrite(led, HIGH);
+}
+void apagaLed(){
+  digitalWrite(led, LOW);  
+}
