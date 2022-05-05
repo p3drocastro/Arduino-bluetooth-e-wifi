@@ -1,0 +1,136 @@
+#include <WiFiNINA.h> // Biblioteca para a comunicação com a rede via WiFi
+#include <DHT.h> //Biblioteca para a utilização do Sensor de Temperatura e Humidade DH11
+#include "ThingSpeak.h" // Biblioteca para o acesso à plataforma IOT ThingSpeak. Plataforma que estou a utilizar neste projeto IOT para mostrar online os valores dos sensores.
+
+char ssid[] = "iPhone";    // o nome da minha rede doméstica
+char pass[] = "castropedro";   // a password da rede wifi
+
+WiFiClient  client; // objeto que fará a comunicação com a plataforma ThingSpeak
+
+/* Depois do registo na plataforma ThingSpeak, temos acesso ao ID do nosso canal
+e à chave que nos permite escrever dados no canal  */
+
+unsigned long myChannelNumber = 1403613;
+const char * myWriteAPIKey = "DZY8MLNPUJQNX7H1";
+
+/*Definição das variáveis e pinos de input e output   */
+
+#define DHTPIN A0
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE); //Objeto para utilizar o sensor DHT que tem como parámetros a porta de entrada e o tipo de sensor.
+
+#define soloPin A1 //Sensor de humidade do solo
+#define luzPin 6 //Sensor da luz da casa
+#define sensorPir 8 //Sensor de movimento
+
+void setup() {
+  pinMode(luzPin, INPUT);
+  pinMode(sensorPir, INPUT);
+  Serial.begin(115200);  // Inicializar o serial
+  while (!Serial) {
+    ; // Espera que o serial conecte.
+  
+  // Verificação do modulo WiFi:
+  if (WiFi.status() == WL_NO_MODULE) {
+    Serial.println("Comunicação com o módulo WiFi falhou!");
+    // não continuar
+    while (true);
+  }
+  ThingSpeak.begin(client);  //Inicializar o ThingSpeak
+  dht.begin(); //Inicializar o DHT
+ }
+}
+
+void loop() {
+  // Conectar ou Reconectar ao WiFi
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.print("A tentar conectar à rede WiFi: ");
+    Serial.println(ssid);
+    while(WiFi.status() != WL_CONNECTED){
+      WiFi.begin(ssid, pass); // Conectar à rede com protocolo WPA/WPA2.
+      Serial.print(".");
+      delay(5000);     
+    } 
+    Serial.println("\nConectado.");
+  }
+
+  int temp = dht.readTemperature();
+  // Escrever para o ThingSpeak. Uma conta gratuita tem 8 campos por canal. Permite escrever valores até 8 sensores.
+  // Aqui, escrevemos para o canal com a chave correspondente, para o campo 1 o valor da temperatura do sensor DHT
+  int x = ThingSpeak.writeField(myChannelNumber, 1, temp, myWriteAPIKey);
+  
+  /*A Função ThingSpeak.writeField faz o upload dos dados e, caso não hajam algum erro, devolve um valor status HTTP de 200.
+   Caso hajam erros no upload a msg será outra*/
+  
+  if(x == 200){
+    Serial.println("Canal atualizado com sucesso. Valor da temperatura do ar");
+  }
+  else{
+    Serial.println("Erro ao carregar os dados. " + String(x));
+  }
+
+ delay(20000); // A conta gratuita do ThingSpeak precisa de 15s de delay entre uploads. Dou 20s para ser seguro.
+
+ int humidade = dht.readHumidity();
+ int x1 = ThingSpeak.writeField(myChannelNumber, 2, humidade, myWriteAPIKey);
+
+  if(x1 == 200){
+    Serial.println("Canal atualizado com sucesso. Valor da humidade do ar");
+  }
+  else{
+    Serial.println("Erro ao carregar os dados " + String(x1));
+  }
+
+  delay(20000); //Espera 20s para nova atualização: Imposição da conta gratuita do ThingSpeak
+
+ int solo = analogRead(soloPin);
+ int x2 = ThingSpeak.writeField(myChannelNumber, 3, solo, myWriteAPIKey);
+
+  if(x2 == 200){
+    Serial.println("Canal atualizado com sucesso. Valor da humidade do solo");
+  }
+  else{
+    Serial.println("Erro ao carregar os dados " + String(x1));
+  }
+
+  delay(20000); //Espera 20s para nova atualização: Imposição da conta gratuita do ThingSpeak
+
+  int luz = digitalRead(luzPin);
+  int x3;
+  if(luz == HIGH){
+    luz = 1;
+    x3 = ThingSpeak.writeField(myChannelNumber, 4, luz, myWriteAPIKey);
+  } else{
+    luz = 0;
+    x3 = ThingSpeak.writeField(myChannelNumber, 4, luz, myWriteAPIKey);
+  }
+
+  if(x3 == 200){
+    Serial.println("Canal atualizado com sucesso. Valor da Luz on ou off.");
+  }
+  else{
+    Serial.println("Erro ao carregar os dados " + String(x1));
+  }
+
+  delay(20000); //Espera 20s para nova atualização: Imposição da conta gratuita do ThingSpeak
+
+  int pir = digitalRead(sensorPir);
+  int x4;
+  if(pir == HIGH){
+    pir = 1;
+    x4 = ThingSpeak.writeField(myChannelNumber, 5, pir, myWriteAPIKey);
+  } else{
+    pir = 0;
+    x4 = ThingSpeak.writeField(myChannelNumber, 5, pir, myWriteAPIKey);
+  }
+
+  if(x4 == 200){
+    Serial.println("Canal atualizado com sucesso. Valor do movimento");
+  }
+  else{
+    Serial.println("Erro ao carregar os dados " + String(x1));
+  }
+
+  delay(20000); //Espera 20s para nova atualização: Imposição da conta gratuita do ThingSpeak
+
+}
