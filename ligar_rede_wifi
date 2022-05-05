@@ -1,0 +1,49 @@
+#include <WiFiNINA.h>
+
+char ssid[] = "iPhone";   // SSID (name) da rede wifi
+char pass[] = "castropedro";   // senha da rede wifi (wpa/wpa2)
+int status = WL_IDLE_STATUS; // estado da ligação à rede wifi
+
+void setup() {
+  //Ligação ao serial monitor e espera enqunto não abrir a ligação
+  Serial.begin(9600);
+  while (!Serial);
+
+  // Tentativa de ligar à rede wi-fi
+  while (status != WL_CONNECTED) {
+    Serial.print("A tentar ligar a rede wifi: ");
+    Serial.println(ssid);
+    // informação de que está ligado à rede wifi
+    status = WiFi.begin(ssid, pass);
+    // espera 10s para ligar e caso nao consiga volta a tentar
+    delay(10000);
+  }
+
+  // Ligado à rede - mostrar os dados da rede wifi:
+  Serial.println("Estas ligado a rede wifi");
+  Serial.println("---------------------------------------");
+}
+
+void loop() {
+    //mostra o IP da rede interna
+    Serial.println("Informacoes da ligacao:");
+    IPAddress ip = WiFi.localIP();
+    Serial.print("Endereco IP: ");
+    Serial.println(ip);
+    //mostra informações da rede wifi
+    Serial.println();
+    Serial.println("Informacoes da rede wifi:");
+    Serial.print("SSID: ");
+    Serial.println(WiFi.SSID());
+    // mostra o sinal da rede wifi
+    long rssi = WiFi.RSSI();
+    Serial.print("nivel do sinal (RSSI):");
+    Serial.println(rssi);
+    Serial.println("---------------------------------------");
+    delay(5000);
+  /*
+   Escrever a partit deste ponto o código do programa
+   Ex: receber um comando externo para ligar um LED
+   */
+   
+}
